@@ -32,7 +32,7 @@ public class IdempotencyRecord implements Persistable<String> {
     @Column(name = "status", nullable = false, length = 20)
     private IdempotencyStore.Status status;
 
-    @JdbcTypeCode(SqlTypes.LONG32VARCHAR)
+    // Length.LONG32 selects text / longtext / clob / varchar(max) per vendor (nvarchar(max) when nationalized)
     @Column(name = "response_body", length = Length.LONG32)
     private String responseBody;
 

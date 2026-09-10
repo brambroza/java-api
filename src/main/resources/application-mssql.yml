@@ -3,3 +3,8 @@ spring:
     url: ${DB_URL:jdbc:sqlserver://localhost:1433;databaseName=oms;encrypt=true;trustServerCertificate=true}
     username: ${DB_USERNAME:sa}
     password: ${DB_PASSWORD:Oms_Str0ng!Pass}
+  jpa:
+    properties:
+      hibernate:
+        # SQL Server VARCHAR is not Unicode; map Java Strings to NVARCHAR / NVARCHAR(MAX)
+        use_nationalized_character_data: true

@@ -32,7 +32,7 @@ public class OutboxEvent implements Persistable<UUID> {
     @Column(name = "event_type", nullable = false, length = 100)
     private String eventType;
 
-    @JdbcTypeCode(SqlTypes.LONG32VARCHAR)
+    // Length.LONG32 selects text / longtext / clob / varchar(max) per vendor (nvarchar(max) when nationalized)
     @Column(name = "payload", nullable = false, length = Length.LONG32)
     private String payload;
 

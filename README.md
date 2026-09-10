@@ -120,6 +120,7 @@ Module ติดต่อกันผ่าน **application service + read mode
    | Boolean | `boolean` | Hibernate map เป็น `boolean` / `bit` / `number(1,0)` ให้เอง |
    | เงิน | `decimal(19,4)` + ISO-4217 | ห้ามใช้ float; scale คงที่ทุกค่าย |
    | ชื่อตาราง | `orders` ไม่ใช่ `order`, `idem_key` ไม่ใช่ `key` | reserved word ต่างกันในแต่ละค่าย |
+   | Unicode บน SQL Server | migration ใช้ `nvarchar` และ profile `mssql` ตั้ง `hibernate.use_nationalized_character_data=true` | `varchar` ของ SQL Server ผูกกับ code page ทำให้ภาษาไทยกลายเป็น `?` (vendor contract test จับได้) |
    | Locking | optimistic (`@Version`) เป็นหลัก; `SKIP LOCKED` ผ่าน Hibernate hint (fallback เป็น `FOR UPDATE` บน H2) | ไม่เขียน SQL เฉพาะค่ายในโค้ด |
 
 5. **Schema validation เป็นเกราะ**: profile `local`, `test` และ vendor tests รันด้วย `spring.jpa.hibernate.ddl-auto=validate`
