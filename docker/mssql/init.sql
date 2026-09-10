@@ -1,0 +1,5 @@
+IF DB_ID('oms') IS NULL
+BEGIN
+    CREATE DATABASE oms;
+END
+GO

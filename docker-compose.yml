@@ -1,0 +1,84 @@
+# Bring up any vendor and point the same image at it:
+#   docker compose up -d postgres && docker compose run --rm -e SPRING_PROFILES_ACTIVE=postgres app
+#   docker compose --profile mysql up -d
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: oms
+      POSTGRES_USER: oms
+      POSTGRES_PASSWORD: oms
+    ports: ["5432:5432"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U oms -d oms"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  mysql:
+    image: mysql:8.4
+    profiles: ["mysql"]
+    environment:
+      MYSQL_DATABASE: oms
+      MYSQL_USER: oms
+      MYSQL_PASSWORD: oms
+      MYSQL_ROOT_PASSWORD: root
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_0900_ai_ci"]
+    ports: ["3306:3306"]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  mariadb:
+    image: mariadb:11
+    profiles: ["mariadb"]
+    environment:
+      MARIADB_DATABASE: oms
+      MARIADB_USER: oms
+      MARIADB_PASSWORD: oms
+      MARIADB_ROOT_PASSWORD: root
+    ports: ["3307:3306"]
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    profiles: ["mssql"]
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "Oms_Str0ng!Pass"
+      MSSQL_PID: Developer
+    ports: ["1433:1433"]
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P 'Oms_Str0ng!Pass' -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+
+  # SQL Server does not create databases from env vars: create 'oms' once the server is healthy.
+  mssql-init:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    profiles: ["mssql"]
+    depends_on:
+      mssql:
+        condition: service_healthy
+    volumes:
+      - ./docker/mssql/init.sql:/init.sql:ro
+    entrypoint: ["/opt/mssql-tools18/bin/sqlcmd", "-C", "-S", "mssql", "-U", "sa", "-P", "Oms_Str0ng!Pass", "-i", "/init.sql"]
+
+  app:
+    build: .
+    image: enterprise/oms-service:local
+    profiles: ["app"]
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-postgres}
+      DB_URL: ${DB_URL:-jdbc:postgresql://postgres:5432/oms}
+      DB_USERNAME: ${DB_USERNAME:-oms}
+      DB_PASSWORD: ${DB_PASSWORD:-oms}
+      APP_SECURITY_ENABLED: ${APP_SECURITY_ENABLED:-false}
+    ports: ["8080:8080"]
