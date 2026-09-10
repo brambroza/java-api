@@ -1,0 +1,16 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:omstest;DB_CLOSE_DELAY=-1
+    username: sa
+    password: ""
+  jpa:
+    hibernate:
+      ddl-auto: validate      # proves the H2 migration matches the entity mapping
+app:
+  security:
+    enabled: false
+  scheduling:
+    enabled: false
+  seed-data: false
+  outbox:
+    publisher: recording

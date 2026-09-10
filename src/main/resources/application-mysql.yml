@@ -1,0 +1,5 @@
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/oms?connectionTimeZone=UTC&rewriteBatchedStatements=true}
+    username: ${DB_USERNAME:oms}
+    password: ${DB_PASSWORD:oms}

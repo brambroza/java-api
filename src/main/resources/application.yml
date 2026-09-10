@@ -1,0 +1,107 @@
+# ---------------------------------------------------------------------------
+# Common configuration (all environments). Vendor-specific settings live in
+# application-<vendor>.yml and are selected with SPRING_PROFILES_ACTIVE.
+# ---------------------------------------------------------------------------
+spring:
+  application:
+    name: oms-service
+  profiles:
+    default: local
+  threads:
+    virtual:
+      enabled: true            # Java 21 virtual threads for request handling
+  jpa:
+    open-in-view: false        # never hold a DB connection across the view/serialization phase
+    hibernate:
+      ddl-auto: none           # schema is owned by Flyway; 'validate' is enabled in local/test/CI profiles
+    properties:
+      hibernate:
+        # --- portability: store timestamps as UTC in plain TIMESTAMP columns on every vendor
+        jdbc.time_zone: UTC
+        timezone.default_storage: NORMALIZE_UTC
+        # --- performance defaults used by most large-scale deployments
+        jdbc.batch_size: 50
+        order_inserts: true
+        order_updates: true
+        default_batch_fetch_size: 50
+        query.in_clause_parameter_padding: true
+        query.fail_on_pagination_over_collection_fetch: true
+        connection.provider_disables_autocommit: true
+  datasource:
+    hikari:
+      pool-name: oms-pool
+      maximum-pool-size: ${DB_POOL_MAX:10}
+      minimum-idle: ${DB_POOL_MIN_IDLE:2}
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      auto-commit: false
+  flyway:
+    enabled: true
+    # {vendor} resolves at runtime to h2 | postgresql | mysql | mariadb | sqlserver | oracle
+    locations: classpath:db/migration/{vendor}
+    validate-on-migrate: true
+  data:
+    web:
+      pageable:
+        default-page-size: 20
+        max-page-size: 100
+  mvc:
+    problemdetails:
+      enabled: true
+
+server:
+  shutdown: graceful
+  port: ${SERVER_PORT:8080}
+  error:
+    include-stacktrace: never
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when_authorized
+      probes:
+        enabled: true
+  info:
+    env:
+      enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+info:
+  app:
+    name: ${spring.application.name}
+    description: Enterprise Order Management Service
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} %5p [%X{correlationId:-}] %-40.40logger{39} : %m%n"
+  level:
+    root: INFO
+    com.enterprise.oms: INFO
+
+app:
+  security:
+    enabled: ${APP_SECURITY_ENABLED:true}
+    # Dev/test only: set APP_SECURITY_JWT_SECRET (>= 32 bytes) to accept HS256 tokens signed with a shared secret.
+    # Production: leave it unset and configure spring.security.oauth2.resourceserver.jwt.issuer-uri for your IdP.
+  scheduling:
+    enabled: true
+  outbox:
+    publisher: log                        # log | (kafka, sqs, ... via your own EventPublisher adapter)
+    batch-size: 50
+    poll-interval: PT5S
+  idempotency:
+    ttl: PT24H

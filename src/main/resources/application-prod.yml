@@ -1,0 +1,16 @@
+# Production hardening: structured JSON logs (ECS), stricter actuator, no seed data.
+logging:
+  structured:
+    format:
+      console: ecs
+management:
+  endpoint:
+    health:
+      show-details: never
+app:
+  seed-data: false
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false

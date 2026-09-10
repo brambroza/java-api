@@ -1,0 +1,13 @@
+# Used by the Testcontainers vendor contract tests. The datasource comes from @ServiceConnection.
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate      # proves each vendor's migration matches the entity mapping
+app:
+  security:
+    enabled: false
+  scheduling:
+    enabled: false
+  seed-data: false
+  outbox:
+    publisher: recording
